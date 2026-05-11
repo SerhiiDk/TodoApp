@@ -1,0 +1,60 @@
+@page "/"
+@inject TodoApp.Services.TodoService TodoService
+
+<PageTitle>Todo App</PageTitle>
+
+<h1>Todo List</h1>
+
+<div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+    <input @bind="newTitle"
+           @bind:event="oninput"
+           @onkeydown="OnKeyDown"
+           placeholder="Нова задача..."
+           style="flex: 1; padding: 0.4rem 0.6rem;" />
+    <button @onclick="AddTodo" disabled="@string.IsNullOrWhiteSpace(newTitle)">
+        Додати
+    </button>
+</div>
+
+@if (!TodoService.GetAll().Any())
+{
+    <p style="color: gray;">Задач поки немає.</p>
+}
+else
+{
+    <ul style="list-style: none; padding: 0;">
+        @foreach (var item in TodoService.GetAll())
+        {
+            <li style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+                <input type="checkbox"
+                       checked="@item.IsCompleted"
+                       @onchange="() => Toggle(item.Id)" />
+                <span style="text-decoration: @(item.IsCompleted ? "line-through" : "none"); flex: 1;">
+                    @item.Title
+                </span>
+                <button @onclick="() => Delete(item.Id)" style="color: red; border: none; background: none; cursor: pointer;">
+                    &#x2715;
+                </button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private string newTitle = string.Empty;
+
+    private void AddTodo()
+    {
+        TodoService.Add(newTitle);
+        newTitle = string.Empty;
+    }
+
+    private void Toggle(int id) => TodoService.Toggle(id);
+
+    private void Delete(int id) => TodoService.Delete(id);
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddTodo();
+    }
+}
