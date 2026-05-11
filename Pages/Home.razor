@@ -11,7 +11,15 @@
            @onkeydown="OnKeyDown"
            placeholder="Нова задача..."
            style="flex: 1; padding: 0.4rem 0.6rem;" />
-    <button @onclick="AddTodo" disabled="@string.IsNullOrWhiteSpace(newTitle)">
+    <button @onclick="AddTodo"
+            disabled="@string.IsNullOrWhiteSpace(newTitle)"
+            style="padding: 0.4rem 1rem;
+                   background-color: @(string.IsNullOrWhiteSpace(newTitle) ? "#a0c4e8" : "#1b6ec2");
+                   color: white;
+                   border: none;
+                   border-radius: 4px;
+                   cursor: @(string.IsNullOrWhiteSpace(newTitle) ? "not-allowed" : "pointer");
+                   transition: background-color 0.2s;">
         Додати
     </button>
 </div>
