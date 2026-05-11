@@ -3,41 +3,84 @@
 
 <PageTitle>Todo App</PageTitle>
 
-<h1>Todo List</h1>
+<MudText Typo="Typo.h4" GutterBottom="true">Todo List</MudText>
 
-<div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
-    <input @bind="newTitle"
-           @bind:event="oninput"
-           @onkeydown="OnKeyDown"
-           placeholder="Нова задача..."
-           style="flex: 1; padding: 0.4rem 0.6rem;" />
-    <button @onclick="AddTodo" disabled="@string.IsNullOrWhiteSpace(newTitle)">
-        Додати
-    </button>
-</div>
+<MudPaper Class="pa-4 mb-4" Elevation="2">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudTextField @bind-Value="newTitle"
+                      Placeholder="New task..."
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Edit"
+                      OnKeyDown="OnKeyDown"
+                      FullWidth="true"
+                      Margin="Margin.Dense" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="AddTodo"
+                   Disabled="@string.IsNullOrWhiteSpace(newTitle)">
+            Add
+        </MudButton>
+    </MudStack>
+</MudPaper>
 
-@if (!TodoService.GetAll().Any())
+@{
+    var todos = TodoService.GetAll();
+}
+
+@if (!todos.Any())
 {
-    <p style="color: gray;">Задач поки немає.</p>
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+        No tasks yet. Add one above!
+    </MudAlert>
 }
 else
 {
-    <ul style="list-style: none; padding: 0;">
-        @foreach (var item in TodoService.GetAll())
-        {
-            <li style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
-                <input type="checkbox"
-                       checked="@item.IsCompleted"
-                       @onchange="() => Toggle(item.Id)" />
-                <span style="text-decoration: @(item.IsCompleted ? "line-through" : "none"); flex: 1;">
-                    @item.Title
-                </span>
-                <button @onclick="() => Delete(item.Id)" style="color: red; border: none; background: none; cursor: pointer;">
-                    &#x2715;
-                </button>
-            </li>
-        }
-    </ul>
+    var pending = todos.Count(t => !t.IsCompleted);
+    var completed = todos.Count(t => t.IsCompleted);
+
+    <MudStack Row="true" Spacing="2" Class="mb-4">
+        <MudChip Icon="@Icons.Material.Filled.PendingActions" Color="Color.Warning">@pending pending</MudChip>
+        <MudChip Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success">@completed done</MudChip>
+    </MudStack>
+
+    <MudPaper Elevation="2">
+        <MudList Dense="true">
+            @foreach (var item in todos)
+            {
+                <MudListItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width:100%">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudCheckBox Checked="@item.IsCompleted"
+                                         CheckedChanged="@((bool val) => OnToggle(item.Id, val))"
+                                         Color="Color.Primary" />
+                            <MudText Style="@(item.IsCompleted ? "text-decoration:line-through; opacity:0.6;" : "")">
+                                @item.Title
+                            </MudText>
+                        </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       OnClick="() => Delete(item.Id)"
+                                       aria-label="Delete task" />
+                    </MudStack>
+                </MudListItem>
+                <MudDivider />
+            }
+        </MudList>
+    </MudPaper>
+
+    @if (completed > 0)
+    {
+        <MudButton Class="mt-3"
+                   Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.DeleteSweep"
+                   OnClick="ClearCompleted">
+            Clear completed
+        </MudButton>
+    }
 }
 
 @code {
@@ -49,9 +92,19 @@ else
         newTitle = string.Empty;
     }
 
-    private void Toggle(int id) => TodoService.Toggle(id);
+    private void OnToggle(int id, bool val)
+    {
+        var item = TodoService.GetAll().FirstOrDefault(x => x.Id == id);
+        if (item is not null) item.IsCompleted = val;
+    }
 
     private void Delete(int id) => TodoService.Delete(id);
+
+    private void ClearCompleted()
+    {
+        foreach (var item in TodoService.GetAll().Where(t => t.IsCompleted).ToList())
+            TodoService.Delete(item.Id);
+    }
 
     private void OnKeyDown(KeyboardEventArgs e)
     {
