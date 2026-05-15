@@ -41,19 +41,18 @@ else
     var completed = todos.Count(t => t.IsCompleted);
 
     <MudStack Row="true" Spacing="2" Class="mb-4">
-        <MudChip Icon="@Icons.Material.Filled.PendingActions" Color="Color.Warning">@pending pending</MudChip>
-        <MudChip Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success">@completed done</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.PendingActions" Color="Color.Warning">@pending pending</MudChip>
+        <MudChip T="string" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success">@completed done</MudChip>
     </MudStack>
 
     <MudPaper Elevation="2">
-        <MudList Dense="true">
+        <MudList T="string" Dense="true">
             @foreach (var item in todos)
             {
-                <MudListItem>
+                <MudListItem T="string">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width:100%">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudCheckBox Checked="@item.IsCompleted"
-                                         CheckedChanged="@((bool val) => OnToggle(item.Id, val))"
+                            <MudCheckBox T="bool" @bind-Checked="item.IsCompleted"
                                          Color="Color.Primary" />
                             <MudText Style="@(item.IsCompleted ? "text-decoration:line-through; opacity:0.6;" : "")">
                                 @item.Title
@@ -90,12 +89,6 @@ else
     {
         TodoService.Add(newTitle);
         newTitle = string.Empty;
-    }
-
-    private void OnToggle(int id, bool val)
-    {
-        var item = TodoService.GetAll().FirstOrDefault(x => x.Id == id);
-        if (item is not null) item.IsCompleted = val;
     }
 
     private void Delete(int id) => TodoService.Delete(id);
